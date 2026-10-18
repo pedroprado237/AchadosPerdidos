@@ -1,0 +1,71 @@
+# Checklist - Teste do zero em pasta recém-clonada: git clone + cópia do .env.example + docker compose up -d --build, sem nenhum passo manual extra
+# Gerado em: 2026-10-18 20:35:20 -0300
+
+$ git clone <repositório> clone-teste && cd clone-teste   # caminho local omitido
+
+$ git log --oneline -1; ls -A
+2b7d05a Ambiente Achados & Perdidos em contêineres (G1 Computação em Nuvem)
+.env.example
+.git/
+.gitattributes
+.gitignore
+README.md
+app/
+backups/
+db/
+docker-compose.yml
+docs/
+nginx/
+
+$ docker compose config >/dev/null   # sem .env: falha com mensagem clara
+error while interpolating services.web.environment.DB_NAME: required variable POSTGRES_DB is missing a value: defina POSTGRES_DB no .env
+
+$ cp .env.example .env
+
+$ docker compose up -d --build 2>&1 | grep -E "Built|Created|Healthy|Started|Error"
+ achados-perdidos-web:1.0  Built
+ Network achados-perdidos_rede_borda  Created
+ Network achados-perdidos_rede_interna  Created
+ Volume achados-perdidos_fotos  Created
+ Volume achados-perdidos_dados_banco  Created
+ Container achados-perdidos-db-1  Created
+ Container achados-perdidos-web-1  Created
+ Container achados-perdidos-nginx-1  Created
+ Container achados-perdidos-db-1  Started
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-web-1  Started
+ Container achados-perdidos-web-1  Healthy
+ Container achados-perdidos-nginx-1  Started
+
+$ docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+NAME                       STATUS                    PORTS
+achados-perdidos-db-1      Up 12 seconds (healthy)   5432/tcp
+achados-perdidos-nginx-1   Up Less than a second     0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
+achados-perdidos-web-1     Up 6 seconds (healthy)    5000/tcp
+
+$ curl -s http://localhost:8080/health
+{"banco":"conectado","container":"e2fbf2627839","status":"ok"}
+
+$ docker compose exec web whoami
+app
+
+$ docker compose port db 5432   # sem porta no host
+:0
+
+$ curl -s -F descricao="Oculos de grau" -F local="Bloco B" -F foto=@docs/amostras/oculos.jpg http://localhost:8080/itens
+{"foto":"ec87d43e1f36424c878bcc7ccf1e7c5e.jpg","id":4}
+
+$ curl -s http://localhost:8080/estatisticas
+{"fotos_no_volume":1,"itens_no_banco":4}
+
+$ docker compose down 2>&1 | tail -1 && docker compose up -d --wait 2>&1 | tail -1
+ Network achados-perdidos_rede_borda  Removed
+ Container achados-perdidos-web-1  Healthy
+
+$ curl -s http://localhost:8080/estatisticas   # persistiu após down + up
+{"fotos_no_volume":1,"itens_no_banco":4}
+
+$ docker compose down -v 2>&1 | grep -E "Volume.*Removed"
+ Volume achados-perdidos_dados_banco  Removed
+ Volume achados-perdidos_fotos  Removed
+
