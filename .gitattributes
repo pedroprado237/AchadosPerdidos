@@ -1,0 +1,5 @@
+# Força LF nos arquivos montados/executados em contêineres Linux,
+# mesmo quando o repositório é clonado no Windows.
+* text=auto eol=lf
+*.png binary
+*.jpg binary

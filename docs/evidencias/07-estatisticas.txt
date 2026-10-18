@@ -1,0 +1,6 @@
+# T4/RF04 - GET /estatisticas: 4 itens no banco (3 do init.sql + 1 cadastrado) e 1 foto no volume
+# Gerado em: 2026-10-18 20:11:01 -0300
+
+$ curl -s http://localhost:8080/estatisticas
+{"fotos_no_volume":1,"itens_no_banco":4}
+

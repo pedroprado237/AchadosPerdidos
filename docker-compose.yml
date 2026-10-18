@@ -1,0 +1,97 @@
+# Achados & Perdidos - ambiente completo
+# Uso: cp .env.example .env  &&  docker compose up -d --build
+#
+# Nenhuma credencial é escrita aqui: ${VAR:?msg} lê do .env e aborta
+# com mensagem clara se a variável não estiver definida (RNF03).
+
+name: achados-perdidos
+
+services:
+
+  # Proxy reverso (bônus): único serviço que publica porta no host
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      web:
+        condition: service_healthy
+        restart: true
+    networks:
+      - rede_borda
+
+  # API Flask/Gunicorn: sem porta publicada, alcançada apenas pelo nginx
+  web:
+    build: ./app
+    image: achados-perdidos-web:1.0
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:?defina POSTGRES_DB no .env}
+      DB_USER: ${POSTGRES_USER:?defina POSTGRES_USER no .env}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      UPLOAD_DIR: /app/uploads
+    expose:
+      - "5000"
+    volumes:
+      - fotos:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rede_borda
+      - rede_interna
+
+  # PostgreSQL: isolado na rede interna, sem porta no host
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB no .env}
+      POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - dados_banco:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      # -h 127.0.0.1 força TCP: durante o init.sql o Postgres roda um servidor
+      # temporário só no socket Unix, e um pg_isready sem -h daria falso "pronto".
+      # $$ adia a expansão para dentro do contêiner (nada fixo neste arquivo).
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - rede_interna
+
+  # Painel do banco (bônus): só sobe com  docker compose --profile debug up -d
+  adminer:
+    image: adminer:4.8.1
+    profiles: ["debug"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rede_interna
+
+networks:
+  # web <-> db (exigida pelo enunciado)
+  rede_interna:
+    driver: bridge
+  # nginx <-> web: o proxy não enxerga o banco
+  rede_borda:
+    driver: bridge
+
+volumes:
+  dados_banco:
+  fotos:

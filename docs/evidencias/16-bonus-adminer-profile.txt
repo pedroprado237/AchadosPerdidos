@@ -1,0 +1,61 @@
+# Bônus - adminer no profile debug: ausente no up normal, sobe só com --profile debug, publicado apenas em 127.0.0.1:8081 e autenticando no db pela rede_interna
+# Gerado em: 2026-10-18 20:16:12 -0300
+
+$ docker compose ps --services   # sem profile: adminer não sobe
+db
+nginx
+web
+
+$ docker compose --profile debug up -d --wait
+ adminer Pulling 
+ adminer Pulled   (progresso do download omitido)
+ Container achados-perdidos-db-1  Running
+ Container achados-perdidos-adminer-1  Creating
+ Container achados-perdidos-web-1  Running
+ Container achados-perdidos-nginx-1  Running
+ Container achados-perdidos-adminer-1  Created
+ Container achados-perdidos-db-1  Waiting
+ Container achados-perdidos-db-1  Waiting
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-web-1  Waiting
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-adminer-1  Starting
+ Container achados-perdidos-web-1  Healthy
+ Container achados-perdidos-adminer-1  Started
+ Container achados-perdidos-nginx-1  Waiting
+ Container achados-perdidos-web-1  Waiting
+ Container achados-perdidos-db-1  Waiting
+ Container achados-perdidos-adminer-1  Waiting
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-nginx-1  Healthy
+ Container achados-perdidos-web-1  Healthy
+ Container achados-perdidos-adminer-1  Healthy
+
+$ docker compose --profile debug ps adminer
+NAME                         IMAGE           COMMAND                  SERVICE   CREATED         STATUS        PORTS
+achados-perdidos-adminer-1   adminer:4.8.1   "entrypoint.sh php -…"   adminer   5 seconds ago   Up 1 second   127.0.0.1:8081->8080/tcp
+
+$ curl -s -o NUL -w "GET http://127.0.0.1:8081 -> HTTP %{http_code}\n" http://127.0.0.1:8081/
+GET http://127.0.0.1:8081 -> HTTP 200
+
+$ curl -s -c NUL -o NUL -w "login adminer (server=db) -> HTTP %{http_code} redirect=%{redirect_url}\n" --data-urlencode "auth[driver]=pgsql" --data-urlencode "auth[server]=db" --data-urlencode "auth[username]=$POSTGRES_USER" --data-urlencode "auth[password]=$POSTGRES_PASSWORD" --data-urlencode "auth[db]=$POSTGRES_DB" http://127.0.0.1:8081/
+login adminer (server=db) -> HTTP 302 redirect=http://127.0.0.1:8081/?pgsql=db&username=achados_app&db=achados
+
+$ docker network inspect achados-perdidos_rede_interna --format "{{range .Containers}}{{.Name}} {{.IPv4Address}}{{println}}{{end}}"
+achados-perdidos-adminer-1 172.19.0.4/16
+achados-perdidos-web-1 172.19.0.3/16
+achados-perdidos-db-1 172.19.0.2/16
+
+
+$ docker compose --profile debug rm -sf adminer   # desliga o painel ao terminar a depuração
+ Container achados-perdidos-adminer-1  Stopping
+ Container achados-perdidos-adminer-1  Stopped
+Going to remove achados-perdidos-adminer-1
+ Container achados-perdidos-adminer-1  Removing
+ Container achados-perdidos-adminer-1  Removed
+
+$ docker compose ps --services
+db
+nginx
+web
+

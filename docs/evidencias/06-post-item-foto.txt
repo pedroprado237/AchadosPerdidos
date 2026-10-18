@@ -1,0 +1,13 @@
+# T4/RF03 - POST /itens multipart com foto: retorna 201, o id gerado e o nome UUID da foto gravada no volume
+# Gerado em: 2026-10-18 20:11:00 -0300
+
+$ curl -s -w "\nHTTP %{http_code}\n" -F descricao="Oculos de grau" -F local="Bloco B" -F foto=@docs/amostras/oculos.jpg http://localhost:8080/itens
+{"foto":"34f73f0cc1f94c648563cc84c3ea15e7.jpg","id":4}
+
+HTTP 201
+
+$ curl -s -w "\nHTTP %{http_code}\n" -F local="Bloco B" http://localhost:8080/itens   # validação: sem descricao -> 400
+{"erro":"campos 'descricao' e 'local' sao obrigatorios"}
+
+HTTP 400
+

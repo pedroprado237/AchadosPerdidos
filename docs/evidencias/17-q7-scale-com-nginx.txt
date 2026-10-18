@@ -1,0 +1,46 @@
+# Q7 - Com o proxy (web sem porta no host), --scale web=3 funciona; o DNS do Docker devolve 3 IPs para 'web' e, após reiniciar, o nginx distribui 4/4/4 entre as réplicas
+# Gerado em: 2026-10-18 20:19:40 -0300
+
+$ docker compose up -d --scale web=3 --wait 2>&1 | grep -E "web-[0-9]+ +(Started|Running)"
+ Container achados-perdidos-web-1  Running
+ Container achados-perdidos-web-2  Started
+ Container achados-perdidos-web-3  Started
+
+$ docker compose ps web --format "table {{.Name}}\t{{.ID}}\t{{.Status}}\t{{.Ports}}"
+NAME                     CONTAINER ID   STATUS                   PORTS
+achados-perdidos-web-1   a74ca29943ea   Up 7 minutes (healthy)   5000/tcp
+achados-perdidos-web-2   e2868a4b3d8b   Up 7 seconds (healthy)   5000/tcp
+achados-perdidos-web-3   c15414e569fe   Up 6 seconds (healthy)   5000/tcp
+
+$ docker compose exec nginx nslookup web 127.0.0.11 | grep Address: | tail -n +2   # DNS round-robin: um A record por réplica
+Address: 172.20.0.2
+Address: 172.20.0.4
+Address: 172.20.0.5
+
+$ echo '12 requisições ANTES de reiniciar o nginx (ele resolveu web quando só havia 1 réplica):'; for i in $(seq 1 12); do curl -s http://localhost:8080/health | python -c "import sys,json; print(json.load(sys.stdin)[\"container\"])"; done | tr -d "\r" | sort | uniq -c
+12 requisições ANTES de reiniciar o nginx (ele resolveu web quando só havia 1 réplica):
+     12 a74ca29943ea
+
+$ docker compose restart nginx
+ Container achados-perdidos-nginx-1  Restarting
+ Container achados-perdidos-nginx-1  Started
+
+$ echo '12 requisições DEPOIS de reiniciar o nginx (upstream com zone compartilhada):'; for i in $(seq 1 12); do curl -s http://localhost:8080/health | python -c "import sys,json; print(json.load(sys.stdin)[\"container\"])"; done | tr -d "\r" | sort | uniq -c
+12 requisições DEPOIS de reiniciar o nginx (upstream com zone compartilhada):
+      4 a74ca29943ea
+      4 c15414e569fe
+      4 e2868a4b3d8b
+
+$ for n in 1 2 3; do echo "web-$n: $(docker compose exec --index $n web sh -c "hostname; ls /app/uploads | wc -l" | tr -d "\r" | paste -sd" ") fotos"; done   # mesmo volume nas 3 réplicas
+web-1: a74ca29943ea 3 fotos
+web-2: e2868a4b3d8b 3 fotos
+web-3: c15414e569fe 3 fotos
+
+$ docker compose up -d --scale web=1 --wait 2>&1 | grep -E "Removed"; docker compose restart nginx 2>&1 | tail -1; docker compose ps --format "{{.Name}} {{.Status}}"   # volta a 1 réplica
+ Container achados-perdidos-web-3  Removed
+ Container achados-perdidos-web-2  Removed
+ Container achados-perdidos-nginx-1  Started
+achados-perdidos-db-1 Up 7 minutes (healthy)
+achados-perdidos-nginx-1 Up 1 second
+achados-perdidos-web-1 Up 7 minutes (healthy)
+

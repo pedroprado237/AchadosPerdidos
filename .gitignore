@@ -1,0 +1,13 @@
+# Segredos
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Backups gerados localmente (podem conter fotos com dados pessoais)
+backups/*
+!backups/.gitkeep

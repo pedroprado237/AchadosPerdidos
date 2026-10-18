@@ -1,0 +1,90 @@
+# T5.3 - docker compose down -v remove os volumes: itens e fotos cadastrados se perdem; o banco nasce vazio, o init.sql roda de novo e só os 3 itens de exemplo voltam
+# Gerado em: 2026-10-18 20:21:08 -0300
+
+$ echo "ANTES do down -v:"; curl -s http://localhost:8080/estatisticas
+ANTES do down -v:
+{"fotos_no_volume":3,"itens_no_banco":6}
+
+$ docker volume inspect achados-perdidos_dados_banco achados-perdidos_fotos --format "{{.Name}} criado em {{.CreatedAt}}"
+achados-perdidos_dados_banco criado em 2026-10-18T23:10:10Z
+achados-perdidos_fotos criado em 2026-10-18T23:10:10Z
+
+$ docker compose down -v
+ Container achados-perdidos-nginx-1  Stopping
+ Container achados-perdidos-nginx-1  Stopped
+ Container achados-perdidos-nginx-1  Removing
+ Container achados-perdidos-nginx-1  Removed
+ Container achados-perdidos-web-1  Stopping
+ Container achados-perdidos-web-1  Stopped
+ Container achados-perdidos-web-1  Removing
+ Container achados-perdidos-web-1  Removed
+ Container achados-perdidos-db-1  Stopping
+ Container achados-perdidos-db-1  Stopped
+ Container achados-perdidos-db-1  Removing
+ Container achados-perdidos-db-1  Removed
+ Network achados-perdidos_rede_borda  Removing
+ Volume achados-perdidos_dados_banco  Removing
+ Volume achados-perdidos_fotos  Removing
+ Network achados-perdidos_rede_interna  Removing
+ Volume achados-perdidos_dados_banco  Removed
+ Volume achados-perdidos_fotos  Removed
+ Network achados-perdidos_rede_borda  Removed
+ Network achados-perdidos_rede_interna  Removed
+
+$ docker volume ls --filter name=achados-perdidos   # nenhum volume do projeto
+DRIVER    VOLUME NAME
+
+$ docker compose up -d --wait 2>&1 | grep -E "Volume|Healthy" | sort -u
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-nginx-1  Healthy
+ Container achados-perdidos-web-1  Healthy
+ Volume achados-perdidos_dados_banco  Created
+ Volume achados-perdidos_dados_banco  Creating
+ Volume achados-perdidos_fotos  Created
+ Volume achados-perdidos_fotos  Creating
+
+$ docker volume inspect achados-perdidos_dados_banco achados-perdidos_fotos --format "{{.Name}} criado em {{.CreatedAt}}"   # volumes novos
+achados-perdidos_dados_banco criado em 2026-10-18T23:21:13Z
+achados-perdidos_fotos criado em 2026-10-18T23:21:13Z
+
+$ docker compose logs db | grep -E "initdb.d|CREATE TABLE|INSERT|database system is ready"
+db-1  | 2026-10-18 23:21:16.643 UTC [41] LOG:  database system is ready to accept connections
+db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/init.sql
+db-1  | CREATE TABLE
+db-1  | INSERT 0 3
+db-1  | 2026-10-18 23:21:17.428 UTC [1] LOG:  database system is ready to accept connections
+
+$ echo "DEPOIS do up:"; curl -s http://localhost:8080/estatisticas
+DEPOIS do up:
+{"fotos_no_volume":0,"itens_no_banco":3}
+
+$ curl -s http://localhost:8080/itens | python -m json.tool
+[
+    {
+        "criado_em": "2026-10-18T23:21:16.887334",
+        "descricao": "Garrafa termica azul",
+        "foto": null,
+        "id": 1,
+        "local": "Biblioteca"
+    },
+    {
+        "criado_em": "2026-10-18T23:21:16.887334",
+        "descricao": "Carregador de notebook USB-C",
+        "foto": null,
+        "id": 2,
+        "local": "Laboratorio 3"
+    },
+    {
+        "criado_em": "2026-10-18T23:21:16.887334",
+        "descricao": "Casaco preto com capuz",
+        "foto": null,
+        "id": 3,
+        "local": "Cantina"
+    }
+]
+
+$ docker compose exec web ls -la /app/uploads   # volume fotos recriado vazio, ainda com dono app (herdado da imagem)
+total 8
+drwxr-xr-x 2 app  app  4096 Oct 18 23:08 .
+drwxr-xr-x 1 root root 4096 Oct 18 23:08 ..
+

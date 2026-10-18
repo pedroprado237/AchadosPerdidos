@@ -1,0 +1,28 @@
+# RNF03/RNF04 - web roda como usuário sem privilégios; db sem porta no host; nenhuma senha nos arquivos versionados
+# Gerado em: 2026-10-18 20:11:34 -0300
+
+$ docker compose exec web whoami
+app
+
+$ docker compose exec web id
+uid=10001(app) gid=10001(app) groups=10001(app)
+
+$ docker compose port db 5432    # sem mapeamento para o host
+:0
+
+$ docker compose port web 5000   # web também não publica (só o nginx)
+:0
+
+$ docker compose port nginx 80
+0.0.0.0:8080
+
+$ docker compose exec web ls -ld /app/uploads /app/app.py
+-rwxr-xr-x 1 root root 2339 Oct 18 23:05 /app/app.py
+drwxr-xr-x 2 app  app  4096 Oct 18 23:11 /app/uploads
+
+$ git grep -nIi "$(grep POSTGRES_PASSWORD .env | cut -d= -f2)" -- . ":!*.env" ; echo "ocorrências da senha real em arquivos rastreáveis: $?  (1 = nenhuma)"
+ocorrências da senha real em arquivos rastreáveis: 1  (1 = nenhuma)
+
+$ git check-ignore -v .env
+.gitignore:2:.env	.env
+

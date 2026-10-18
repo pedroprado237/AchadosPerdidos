@@ -1,0 +1,54 @@
+# Bônus - Backup do volume fotos para .tar.gz com contêiner temporário (docker run --rm) e restauração em um volume novo, com checksums idênticos
+# Gerado em: 2026-10-18 20:15:32 -0300
+
+$ echo "Estado atual:"; curl -s http://localhost:8080/estatisticas
+Estado atual:
+{"fotos_no_volume":3,"itens_no_banco":6}
+
+$ docker run --rm -v achados-perdidos_fotos:/origem:ro -v "$(pwd -W)/backups:/backup" alpine:3.20 tar czf /backup/fotos-backup.tar.gz -C /origem .
+Unable to find image 'alpine:3.20' locally
+3.20: Pulling from library/alpine
+25f1d6b1951a: Pulling fs layer
+25f1d6b1951a: Download complete
+25f1d6b1951a: Pull complete
+Digest: sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+Status: Downloaded newer image for alpine:3.20
+
+$ ls -l backups/
+total 20
+-rw-r--r-- 1 Pedro 197121 16682 Oct 18 20:15 fotos-backup.tar.gz
+
+$ docker run --rm -v "$(pwd -W)/backups:/backup:ro" alpine:3.20 tar tzvf /backup/fotos-backup.tar.gz
+drwxr-xr-x 10001/10001         0 2026-10-18 23:12:07 ./
+-rw-r--r-- 10001/10001      4558 2026-10-18 23:12:07 ./1023dbc3404940a992738fd94fba7537.png
+-rw-r--r-- 10001/10001      8400 2026-10-18 23:12:07 ./1515cebf02f44f7dba8775eced78fb71.jpg
+-rw-r--r-- 10001/10001      9517 2026-10-18 23:11:01 ./34f73f0cc1f94c648563cc84c3ea15e7.jpg
+
+$ docker volume create achados-perdidos_fotos_restaurado
+achados-perdidos_fotos_restaurado
+
+$ docker run --rm -v achados-perdidos_fotos_restaurado:/destino -v "$(pwd -W)/backups:/backup:ro" alpine:3.20 tar xzf /backup/fotos-backup.tar.gz -C /destino
+
+$ echo "== original =="; docker run --rm -v achados-perdidos_fotos:/v:ro alpine:3.20 sh -c "cd /v && ls -ln && sha256sum *"
+== original ==
+total 32
+-rw-r--r--    1 10001    10001         4558 Oct 18 23:12 1023dbc3404940a992738fd94fba7537.png
+-rw-r--r--    1 10001    10001         8400 Oct 18 23:12 1515cebf02f44f7dba8775eced78fb71.jpg
+-rw-r--r--    1 10001    10001         9517 Oct 18 23:11 34f73f0cc1f94c648563cc84c3ea15e7.jpg
+2091a19fc25ea2d9792afee1eb05fc39e25673bddd6c2470330ea221014f396f  1023dbc3404940a992738fd94fba7537.png
+3659d0baf853cd1135c62c27cb4536df564230df86af9af0c7d943b91c3ac01f  1515cebf02f44f7dba8775eced78fb71.jpg
+c1f3d657cf44c9691c4ff682a6ccd00022d95fa4064039d65cc40a97df3fc6f0  34f73f0cc1f94c648563cc84c3ea15e7.jpg
+
+$ echo "== restaurado =="; docker run --rm -v achados-perdidos_fotos_restaurado:/v:ro alpine:3.20 sh -c "cd /v && ls -ln && sha256sum *"
+== restaurado ==
+total 32
+-rw-r--r--    1 10001    10001         4558 Oct 18 23:12 1023dbc3404940a992738fd94fba7537.png
+-rw-r--r--    1 10001    10001         8400 Oct 18 23:12 1515cebf02f44f7dba8775eced78fb71.jpg
+-rw-r--r--    1 10001    10001         9517 Oct 18 23:11 34f73f0cc1f94c648563cc84c3ea15e7.jpg
+2091a19fc25ea2d9792afee1eb05fc39e25673bddd6c2470330ea221014f396f  1023dbc3404940a992738fd94fba7537.png
+3659d0baf853cd1135c62c27cb4536df564230df86af9af0c7d943b91c3ac01f  1515cebf02f44f7dba8775eced78fb71.jpg
+c1f3d657cf44c9691c4ff682a6ccd00022d95fa4064039d65cc40a97df3fc6f0  34f73f0cc1f94c648563cc84c3ea15e7.jpg
+
+$ docker volume rm achados-perdidos_fotos_restaurado   # limpeza do volume de teste
+achados-perdidos_fotos_restaurado
+

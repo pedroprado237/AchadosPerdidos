@@ -1,0 +1,26 @@
+# A4 - Tamanho da imagem gerada (python:3.12-slim + dependências) e camadas, mostrando que app.py é a última camada
+# Gerado em: 2026-10-18 20:29:06 -0300
+
+$ docker image ls achados-perdidos-web
+REPOSITORY             TAG       IMAGE ID       CREATED          SIZE
+achados-perdidos-web   1.0       5cd2003a861b   29 seconds ago   206MB
+
+$ docker image history achados-perdidos-web:1.0 --format "table {{.CreatedBy}}\t{{.Size}}" | head -14
+CREATED BY                                      SIZE
+CMD ["gunicorn" "--bind" "0.0.0.0:5000" "--w…   0B
+HEALTHCHECK &{["CMD" "python" "-c" "import u…   0B
+EXPOSE [5000/tcp]                               0B
+USER app                                        0B
+COPY app.py . # buildkit                        12.3kB
+RUN /bin/sh -c pip install --no-cache-dir -r…   21.4MB
+COPY requirements.txt . # buildkit              12.3kB
+RUN /bin/sh -c groupadd --system --gid 10001…   49.2kB
+WORKDIR /app                                    8.19kB
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFER…   0B
+CMD ["python3"]                                 0B
+RUN /bin/sh -c set -eux;  for src in idle3 p…   16.4kB
+RUN /bin/sh -c set -eux;   savedAptMark="$(a…   41.4MB
+
+$ docker compose ps web --format "{{.Name}} usa a imagem {{.Image}} - {{.Status}}"
+achados-perdidos-web-1 usa a imagem achados-perdidos-web:1.0 - Up 7 seconds (healthy)
+

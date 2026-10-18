@@ -1,0 +1,86 @@
+# T5.2 - Inspeção dos volumes: driver local, Mountpoint em /var/lib/docker/volumes/<nome>/_data dentro da VM WSL2 do Docker Desktop, e conteúdo de cada volume
+# Gerado em: 2026-10-18 20:14:35 -0300
+
+$ echo "Estado atual:"; curl -s http://localhost:8080/estatisticas
+Estado atual:
+{"fotos_no_volume":3,"itens_no_banco":6}
+
+$ docker volume ls --filter name=achados-perdidos   # (filtrado para omitir volumes de outros projetos da máquina)
+DRIVER    VOLUME NAME
+local     achados-perdidos_dados_banco
+local     achados-perdidos_fotos
+
+$ docker volume inspect achados-perdidos_dados_banco achados-perdidos_fotos
+[
+    {
+        "CreatedAt": "2026-10-18T23:10:10Z",
+        "Driver": "local",
+        "Labels": {
+            "com.docker.compose.config-hash": "4ba06f54269045a91b2e9d6ea8d9837dc0d6f3b74bb1e27ee4f266381031c402",
+            "com.docker.compose.project": "achados-perdidos",
+            "com.docker.compose.version": "2.40.3",
+            "com.docker.compose.volume": "dados_banco"
+        },
+        "Mountpoint": "/var/lib/docker/volumes/achados-perdidos_dados_banco/_data",
+        "Name": "achados-perdidos_dados_banco",
+        "Options": null,
+        "Scope": "local"
+    },
+    {
+        "CreatedAt": "2026-10-18T23:10:10Z",
+        "Driver": "local",
+        "Labels": {
+            "com.docker.compose.config-hash": "f81a00e624dc4820542b31045a72ca847fa9f7f231f810f740569750675af6fa",
+            "com.docker.compose.project": "achados-perdidos",
+            "com.docker.compose.version": "2.40.3",
+            "com.docker.compose.volume": "fotos"
+        },
+        "Mountpoint": "/var/lib/docker/volumes/achados-perdidos_fotos/_data",
+        "Name": "achados-perdidos_fotos",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+
+$ docker compose exec web ls -l /app/uploads
+total 32
+-rw-r--r-- 1 app app 4558 Oct 18 23:12 1023dbc3404940a992738fd94fba7537.png
+-rw-r--r-- 1 app app 8400 Oct 18 23:12 1515cebf02f44f7dba8775eced78fb71.jpg
+-rw-r--r-- 1 app app 9517 Oct 18 23:11 34f73f0cc1f94c648563cc84c3ea15e7.jpg
+
+$ docker compose exec db sh -c "ls /var/lib/postgresql/data; echo; du -sh /var/lib/postgresql/data; echo -n \"PG_VERSION: \"; cat /var/lib/postgresql/data/PG_VERSION"
+PG_VERSION
+base
+global
+pg_commit_ts
+pg_dynshmem
+pg_hba.conf
+pg_ident.conf
+pg_logical
+pg_multixact
+pg_notify
+pg_replslot
+pg_serial
+pg_snapshots
+pg_stat
+pg_stat_tmp
+pg_subtrans
+pg_tblspc
+pg_twophase
+pg_wal
+pg_xact
+postgresql.auto.conf
+postgresql.conf
+postmaster.opts
+postmaster.pid
+
+46.2M	/var/lib/postgresql/data
+PG_VERSION: 16
+
+# Visão a partir do Windows: o Mountpoint fica no disco virtual (ext4.vhdx) da distro WSL2 'docker-desktop'
+PS> Get-ChildItem \\wsl.localhost\docker-desktop\mnt\docker-desktop-disk\data\docker\volumes\achados-perdidos_fotos\_data | Format-Table Name, Length
+Name                                 Length
+----                                 ------
+1023dbc3404940a992738fd94fba7537.png   4558
+1515cebf02f44f7dba8775eced78fb71.jpg   8400
+34f73f0cc1f94c648563cc84c3ea15e7.jpg   9517

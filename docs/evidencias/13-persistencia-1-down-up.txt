@@ -1,0 +1,94 @@
+# T5.1 - Recriação dos contêineres: após docker compose down + up -d os 6 itens e as 3 fotos continuam (volumes nomeados não são removidos pelo down)
+# Gerado em: 2026-10-18 20:12:06 -0300
+
+$ curl -s -F descricao="Chaveiro com 3 chaves" -F local="Biblioteca" -F foto=@docs/amostras/chaveiro.png http://localhost:8080/itens
+{"foto":"1023dbc3404940a992738fd94fba7537.png","id":5}
+
+$ curl -s -F descricao="Mochila cinza" -F local="Bloco A" -F foto=@docs/amostras/mochila.jpg http://localhost:8080/itens
+{"foto":"1515cebf02f44f7dba8775eced78fb71.jpg","id":6}
+
+$ echo "ANTES do down:"; curl -s http://localhost:8080/estatisticas
+ANTES do down:
+{"fotos_no_volume":3,"itens_no_banco":6}
+
+$ docker compose ps --format "{{.Name}} {{.ID}}"   # IDs dos contêineres antes
+achados-perdidos-db-1 219160fd68a1
+achados-perdidos-nginx-1 0380429fcca4
+achados-perdidos-web-1 ee1985d40667
+
+$ docker compose down
+ Container achados-perdidos-nginx-1  Stopping
+ Container achados-perdidos-nginx-1  Stopped
+ Container achados-perdidos-nginx-1  Removing
+ Container achados-perdidos-nginx-1  Removed
+ Container achados-perdidos-web-1  Stopping
+ Container achados-perdidos-web-1  Stopped
+ Container achados-perdidos-web-1  Removing
+ Container achados-perdidos-web-1  Removed
+ Container achados-perdidos-db-1  Stopping
+ Container achados-perdidos-db-1  Stopped
+ Container achados-perdidos-db-1  Removing
+ Container achados-perdidos-db-1  Removed
+ Network achados-perdidos_rede_interna  Removing
+ Network achados-perdidos_rede_borda  Removing
+ Network achados-perdidos_rede_borda  Removed
+ Network achados-perdidos_rede_interna  Removed
+
+$ docker compose ps -a   # nenhum contêiner
+NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS
+
+$ docker volume ls --filter name=achados-perdidos   # volumes continuam existindo
+DRIVER    VOLUME NAME
+local     achados-perdidos_dados_banco
+local     achados-perdidos_fotos
+
+$ docker compose up -d --wait
+ Network achados-perdidos_rede_interna  Creating
+ Network achados-perdidos_rede_interna  Created
+ Network achados-perdidos_rede_borda  Creating
+ Network achados-perdidos_rede_borda  Created
+ Container achados-perdidos-db-1  Creating
+ Container achados-perdidos-db-1  Created
+ Container achados-perdidos-web-1  Creating
+ Container achados-perdidos-web-1  Created
+ Container achados-perdidos-nginx-1  Creating
+ Container achados-perdidos-nginx-1  Created
+ Container achados-perdidos-db-1  Starting
+ Container achados-perdidos-db-1  Started
+ Container achados-perdidos-db-1  Waiting
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-web-1  Starting
+ Container achados-perdidos-web-1  Started
+ Container achados-perdidos-web-1  Waiting
+ Container achados-perdidos-web-1  Healthy
+ Container achados-perdidos-nginx-1  Starting
+ Container achados-perdidos-nginx-1  Started
+ Container achados-perdidos-nginx-1  Waiting
+ Container achados-perdidos-web-1  Waiting
+ Container achados-perdidos-db-1  Waiting
+ Container achados-perdidos-nginx-1  Healthy
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-web-1  Healthy
+
+$ docker compose ps --format "{{.Name}} {{.ID}}"   # IDs novos: contêineres foram recriados
+achados-perdidos-db-1 fd650d4417e9
+achados-perdidos-nginx-1 ea436a59a780
+achados-perdidos-web-1 a74ca29943ea
+
+$ echo "DEPOIS do up:"; curl -s http://localhost:8080/estatisticas
+DEPOIS do up:
+{"fotos_no_volume":3,"itens_no_banco":6}
+
+$ curl -s http://localhost:8080/itens | python -c "import sys,json; [print(i[\"id\"], i[\"descricao\"], \"|\", i[\"local\"], \"|\", i[\"foto\"]) for i in json.load(sys.stdin)]"
+6 Mochila cinza | Bloco A | /fotos/1515cebf02f44f7dba8775eced78fb71.jpg
+5 Chaveiro com 3 chaves | Biblioteca | /fotos/1023dbc3404940a992738fd94fba7537.png
+4 Oculos de grau | Bloco B | /fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg
+1 Garrafa termica azul | Biblioteca | None
+2 Carregador de notebook USB-C | Laboratorio 3 | None
+3 Casaco preto com capuz | Cantina | None
+
+$ for foto in $(curl -s http://localhost:8080/itens | python -c "import sys,json; [print(i[\"foto\"]) for i in json.load(sys.stdin) if i[\"foto\"]]" | tr -d "\r"); do curl -s -o NUL -w "$foto -> HTTP %{http_code} %{content_type} %{size_download} bytes\n" "http://localhost:8080$foto"; done
+/fotos/1515cebf02f44f7dba8775eced78fb71.jpg -> HTTP 200 image/jpeg 8400 bytes
+/fotos/1023dbc3404940a992738fd94fba7537.png -> HTTP 200 image/png 4558 bytes
+/fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg -> HTTP 200 image/jpeg 9517 bytes
+

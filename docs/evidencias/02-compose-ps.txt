@@ -1,0 +1,9 @@
+# T4 - Estado dos serviços: db, web e nginx em execução; db e web com healthcheck 'healthy'; apenas o nginx publica porta (8080)
+# Gerado em: 2026-10-18 20:10:43 -0300
+
+$ docker compose ps
+NAME                       IMAGE                      COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+achados-perdidos-db-1      postgres:16-alpine         "docker-entrypoint.s…"   db        35 seconds ago   Up 32 seconds (healthy)   5432/tcp
+achados-perdidos-nginx-1   nginx:1.27-alpine          "/docker-entrypoint.…"   nginx     33 seconds ago   Up 14 seconds             0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
+achados-perdidos-web-1     achados-perdidos-web:1.0   "gunicorn --bind 0.0…"   web       34 seconds ago   Up 21 seconds (healthy)   5000/tcp
+

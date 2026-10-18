@@ -1,0 +1,6 @@
+# T4/RF01 - GET /health via nginx responde status ok e banco conectado (container = hostname do contêiner web)
+# Gerado em: 2026-10-18 20:10:46 -0300
+
+$ curl -s http://localhost:8080/health
+{"banco":"conectado","container":"ee1985d40667","status":"ok"}
+

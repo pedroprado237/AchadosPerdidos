@@ -1,0 +1,6 @@
+# T4/RF02 - GET /itens?local=biblio filtra por local (ILIKE, sem diferenciar maiúsculas) e retorna só o item da Biblioteca
+# Gerado em: 2026-10-18 20:10:48 -0300
+
+$ curl -s "http://localhost:8080/itens?local=biblio"
+[{"criado_em":"2026-10-18T23:10:17.919316","descricao":"Garrafa termica azul","foto":null,"id":1,"local":"Biblioteca"}]
+

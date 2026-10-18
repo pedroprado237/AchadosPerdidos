@@ -1,0 +1,51 @@
+# Q3/Q4 - init.sql só roda com o diretório de dados vazio (na recriação o entrypoint pula a inicialização); migração via ALTER TABLE preserva dados; healthchecks de db e web
+# Gerado em: 2026-10-18 20:21:51 -0300
+
+$ docker compose logs db | grep -E "ready to accept|initdb.d" | head -3   # 1ª subida: servidor temporário [pid] fica pronto ANTES do init.sql
+db-1  | 2026-10-18 23:21:16.643 UTC [41] LOG:  database system is ready to accept connections
+db-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/init.sql
+db-1  | 2026-10-18 23:21:17.428 UTC [1] LOG:  database system is ready to accept connections
+
+$ docker compose down && docker compose up -d --wait 2>&1 | grep Healthy | sort -u
+ Container achados-perdidos-nginx-1  Stopping
+ Container achados-perdidos-nginx-1  Stopped
+ Container achados-perdidos-nginx-1  Removing
+ Container achados-perdidos-nginx-1  Removed
+ Container achados-perdidos-web-1  Stopping
+ Container achados-perdidos-web-1  Stopped
+ Container achados-perdidos-web-1  Removing
+ Container achados-perdidos-web-1  Removed
+ Container achados-perdidos-db-1  Stopping
+ Container achados-perdidos-db-1  Stopped
+ Container achados-perdidos-db-1  Removing
+ Container achados-perdidos-db-1  Removed
+ Network achados-perdidos_rede_interna  Removing
+ Network achados-perdidos_rede_borda  Removing
+ Network achados-perdidos_rede_borda  Removed
+ Network achados-perdidos_rede_interna  Removed
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-nginx-1  Healthy
+ Container achados-perdidos-web-1  Healthy
+
+$ docker compose logs db | grep -iE "skipping initialization|ready to accept"   # 2ª subida: init.sql ignorado
+db-1  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+db-1  | 2026-10-18 23:21:57.382 UTC [1] LOG:  database system is ready to accept connections
+
+$ docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "BEGIN;" -c "ALTER TABLE itens ADD COLUMN IF NOT EXISTS devolvido BOOLEAN NOT NULL DEFAULT false;" -c "SELECT id, descricao, devolvido FROM itens;" -c "ROLLBACK;"'   # demonstração revertida
+BEGIN
+ALTER TABLE
+ id |          descricao           | devolvido 
+----+------------------------------+-----------
+  1 | Garrafa termica azul         | f
+  2 | Carregador de notebook USB-C | f
+  3 | Casaco preto com capuz       | f
+(3 rows)
+
+ROLLBACK
+
+$ docker inspect achados-perdidos-db-1 --format "db  health={{.State.Health.Status}} teste={{json .Config.Healthcheck.Test}}"
+db  health=healthy teste=["CMD-SHELL","pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+
+$ docker inspect achados-perdidos-web-1 --format "web health={{.State.Health.Status}} último={{(index .State.Health.Log 0).ExitCode}} (exit code)"
+web health=healthy último=0 (exit code)
+

@@ -1,0 +1,62 @@
+# A4 - docker network inspect da rede_interna: somente web e db conectados (nginx fica fora), com IPs do bridge definido pelo usuário
+# Gerado em: 2026-10-18 20:11:42 -0300
+
+$ docker network inspect achados-perdidos_rede_interna --format "{{json .}}" | python -m json.tool
+{
+    "Name": "achados-perdidos_rede_interna",
+    "Id": "c224c9ddb67c7d0ee98d489ff4d6f53ece4df901851401001063e7744ebf37a6",
+    "Created": "2026-10-18T23:10:09.614467159Z",
+    "Scope": "local",
+    "Driver": "bridge",
+    "EnableIPv4": true,
+    "EnableIPv6": false,
+    "IPAM": {
+        "Driver": "default",
+        "Options": null,
+        "Config": [
+            {
+                "Subnet": "172.20.0.0/16",
+                "Gateway": "172.20.0.1"
+            }
+        ]
+    },
+    "Internal": false,
+    "Attachable": false,
+    "Ingress": false,
+    "ConfigFrom": {
+        "Network": ""
+    },
+    "ConfigOnly": false,
+    "Containers": {
+        "219160fd68a12eb7b1df3155e79ff8a0c1aa6ae91aebcde3e7c7d02c2a2fe47b": {
+            "Name": "achados-perdidos-db-1",
+            "EndpointID": "bcb4eac363bb8ae423c22a93b8f669042a2a4ab3d06cdc2f7dfd167b813dd754",
+            "MacAddress": "fe:be:c9:a0:f3:92",
+            "IPv4Address": "172.20.0.2/16",
+            "IPv6Address": ""
+        },
+        "ee1985d40667582edaceb08180a08ff1432763f9b854e9f1fc0949bf713b74ee": {
+            "Name": "achados-perdidos-web-1",
+            "EndpointID": "5010b40e434d03c4c9e1aeaead3c4782fb0eb99b265d7f45917029dd87b40d45",
+            "MacAddress": "e2:ec:74:c0:8b:63",
+            "IPv4Address": "172.20.0.3/16",
+            "IPv6Address": ""
+        }
+    },
+    "Options": {
+        "com.docker.network.enable_ipv4": "true",
+        "com.docker.network.enable_ipv6": "false"
+    },
+    "Labels": {
+        "com.docker.compose.config-hash": "86a318c8db10da1fc0c8c8fa73ba1d6b008ed8c76eb44b4821d23f42e84b1737",
+        "com.docker.compose.network": "rede_interna",
+        "com.docker.compose.project": "achados-perdidos",
+        "com.docker.compose.version": "2.40.3"
+    }
+}
+
+$ docker network inspect achados-perdidos_rede_borda --format "{{range .Containers}}{{.Name}} {{.IPv4Address}}{{println}}{{end}}"   # rede_borda: nginx <-> web
+achados-perdidos-nginx-1 172.19.0.3/16
+achados-perdidos-web-1 172.19.0.2/16
+
+

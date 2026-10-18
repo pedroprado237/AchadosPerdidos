@@ -1,0 +1,43 @@
+# Q7 - Na configuração base do enunciado (web publicando 8080:5000), --scale web=3 falha: a 1ª réplica ocupa a porta 8080 do host e as demais não conseguem fazer o bind
+# Gerado em: 2026-10-18 20:20:28 -0300
+
+$ cat q7-base.override.yml
+# Reproduz a arquitetura base do enunciado: web publicando 8080:5000 (sem nginx)
+services:
+  web:
+    ports:
+      - "8080:5000"
+
+$ docker compose -p q7-base -f docker-compose.yml -f q7-base.override.yml up -d --scale web=3 web
+ Network q7-base_rede_interna  Creating
+ Network q7-base_rede_interna  Created
+ Network q7-base_rede_borda  Creating
+ Network q7-base_rede_borda  Created
+ Volume q7-base_fotos  Creating
+ Volume q7-base_fotos  Created
+ Volume q7-base_dados_banco  Creating
+ Volume q7-base_dados_banco  Created
+ Container q7-base-db-1  Creating
+ Container q7-base-db-1  Created
+ Container q7-base-web-3  Creating
+ Container q7-base-web-1  Creating
+ Container q7-base-web-2  Creating
+ Container q7-base-web-3  Created
+ Container q7-base-web-2  Created
+ Container q7-base-web-1  Created
+ Container q7-base-db-1  Starting
+ Container q7-base-db-1  Started
+ Container q7-base-db-1  Waiting
+ Container q7-base-db-1  Healthy
+ Container q7-base-web-1  Starting
+ Container q7-base-web-1  Started
+ Container q7-base-web-2  Starting
+Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint q7-base-web-2 (a9d469eccf1b87f24c9b0f6d8ed6febaaa118822f9dd594da791b30ada845b63): Bind for 0.0.0.0:8080 failed: port is already allocated
+
+$ docker compose -p q7-base ps -a --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+NAME            STATUS                           PORTS
+q7-base-db-1    Up 7 seconds (healthy)           5432/tcp
+q7-base-web-1   Up 1 second (health: starting)   0.0.0.0:8080->5000/tcp, [::]:8080->5000/tcp
+q7-base-web-2   Created                          
+q7-base-web-3   Created                          
+

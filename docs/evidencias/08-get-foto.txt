@@ -1,0 +1,53 @@
+# T4/RF04 - GET /fotos/<nome> devolve a imagem (image/jpeg) e o arquivo baixado é idêntico ao enviado (mesmo SHA-256)
+# Gerado em: 2026-10-18 20:11:17 -0300
+
+$ curl -s http://localhost:8080/itens | python -m json.tool
+[
+    {
+        "criado_em": "2026-10-18T23:11:01.022473",
+        "descricao": "Oculos de grau",
+        "foto": "/fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg",
+        "id": 4,
+        "local": "Bloco B"
+    },
+    {
+        "criado_em": "2026-10-18T23:10:17.919316",
+        "descricao": "Garrafa termica azul",
+        "foto": null,
+        "id": 1,
+        "local": "Biblioteca"
+    },
+    {
+        "criado_em": "2026-10-18T23:10:17.919316",
+        "descricao": "Carregador de notebook USB-C",
+        "foto": null,
+        "id": 2,
+        "local": "Laboratorio 3"
+    },
+    {
+        "criado_em": "2026-10-18T23:10:17.919316",
+        "descricao": "Casaco preto com capuz",
+        "foto": null,
+        "id": 3,
+        "local": "Cantina"
+    }
+]
+
+$ curl -sI http://localhost:8080/fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg
+HTTP/1.1 200 OK
+Server: nginx
+Date: Sun, 18 Oct 2026 23:11:18 GMT
+Content-Type: image/jpeg
+Content-Length: 9517
+Connection: keep-alive
+Content-Disposition: inline; filename=34f73f0cc1f94c648563cc84c3ea15e7.jpg
+Last-Modified: Sun, 18 Oct 2026 23:11:01 GMT
+Cache-Control: no-cache
+ETag: "1792365061.0058882-9517-2200637184"
+Accept-Ranges: bytes
+
+
+$ curl -s http://localhost:8080/fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg -o "<download>/foto-baixada.jpg" && sha256sum docs/amostras/oculos.jpg "<download>/foto-baixada.jpg" | sed 's|C:/Users/.*/scratchpad/|<download>/|'
+c1f3d657cf44c9691c4ff682a6ccd00022d95fa4064039d65cc40a97df3fc6f0 *docs/amostras/oculos.jpg
+c1f3d657cf44c9691c4ff682a6ccd00022d95fa4064039d65cc40a97df3fc6f0 *<download>/foto-baixada.jpg
+

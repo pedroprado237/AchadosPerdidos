@@ -1,0 +1,25 @@
+# T4 - Últimas 20 linhas de log do web: boot do Gunicorn (2 workers em 0.0.0.0:5000) e access log das requisições via nginx e do healthcheck
+# Gerado em: 2026-10-18 20:11:33 -0300
+
+$ docker compose logs web --tail 20
+web-1  | [2026-10-18 23:10:25 +0000] [7] [INFO] Booting worker with pid: 7
+web-1  | [2026-10-18 23:10:25 +0000] [8] [INFO] Booting worker with pid: 8
+web-1  | 127.0.0.1 - - [18/Oct/2026:23:10:30 +0000] "GET /health HTTP/1.1" 200 63 "-" "Python-urllib/3.12"
+web-1  | 127.0.0.1 - - [18/Oct/2026:23:10:47 +0000] "GET /health HTTP/1.1" 200 63 "-" "Python-urllib/3.12"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:10:47 +0000] "GET /health HTTP/1.0" 200 63 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:10:48 +0000] "GET /itens HTTP/1.0" 200 366 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:10:48 +0000] "GET /itens?local=biblio HTTP/1.0" 200 120 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:01 +0000] "POST /itens HTTP/1.0" 201 55 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:01 +0000] "POST /itens HTTP/1.0" 400 57 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:01 +0000] "GET /estatisticas HTTP/1.0" 200 41 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:01 +0000] "GET /itens HTTP/1.0" 200 516 "-" "curl/8.21.0"
+web-1  | 127.0.0.1 - - [18/Oct/2026:23:11:04 +0000] "GET /health HTTP/1.1" 200 63 "-" "Python-urllib/3.12"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:04 +0000] "GET /itens HTTP/1.0" 200 516 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:05 +0000] "HEAD /fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg HTTP/1.0" 200 0 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:05 +0000] "GET /fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg HTTP/1.0" 200 0 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:17 +0000] "GET /itens HTTP/1.0" 200 516 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:17 +0000] "GET /itens HTTP/1.0" 200 516 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:18 +0000] "HEAD /fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg HTTP/1.0" 200 0 "-" "curl/8.21.0"
+web-1  | 172.19.0.3 - - [18/Oct/2026:23:11:18 +0000] "GET /fotos/34f73f0cc1f94c648563cc84c3ea15e7.jpg HTTP/1.0" 200 0 "-" "curl/8.21.0"
+web-1  | 127.0.0.1 - - [18/Oct/2026:23:11:20 +0000] "GET /health HTTP/1.1" 200 63 "-" "Python-urllib/3.12"
+

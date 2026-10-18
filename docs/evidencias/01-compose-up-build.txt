@@ -1,0 +1,83 @@
+# T4 - Subida do ambiente do zero com um único comando (build da imagem web + criação de redes e volumes)
+# Gerado em: 2026-10-18 20:10:01 -0300
+
+$ docker compose up -d --build
+#1 [internal] load local bake definitions
+#1 reading from stdin 604B 0.1s done
+#1 DONE 0.1s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.28kB 0.1s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 2.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 248B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 63B 0.0s done
+#5 DONE 0.1s
+
+#6 [1/6] FROM docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#6 resolve docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1
+#6 resolve docker.io/library/python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1 0.2s done
+#6 DONE 0.2s
+
+#7 [4/6] COPY requirements.txt .
+#7 CACHED
+
+#8 [5/6] RUN pip install --no-cache-dir -r requirements.txt
+#8 CACHED
+
+#9 [2/6] WORKDIR /app
+#9 CACHED
+
+#10 [3/6] RUN groupadd --system --gid 10001 app  && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app  && mkdir -p /app/uploads  && chown app:app /app/uploads
+#10 CACHED
+
+#11 [6/6] COPY app.py .
+#11 CACHED
+
+#12 exporting to image
+#12 exporting layers 0.0s done
+#12 exporting manifest sha256:cf6f45a09277edc28a207a919b178bf45a71f759f5aa61a318f6ddcee1808ca7 0.0s done
+#12 exporting config sha256:ce8f28d8227b7e50074c3358996e6ee6bfb7994f1938c2ecba9061a2a6bef84d 0.0s done
+#12 exporting attestation manifest sha256:cb6af664c60e21d2e36bd401e1ec3aab93d79b4236f4cfbf8fc7d633f3bc1fae
+#12 exporting attestation manifest sha256:cb6af664c60e21d2e36bd401e1ec3aab93d79b4236f4cfbf8fc7d633f3bc1fae 0.1s done
+#12 exporting manifest list sha256:140960fd17f62073b932ec309675791299bc19c11bfa998d2452bc52f76ace25
+#12 exporting manifest list sha256:140960fd17f62073b932ec309675791299bc19c11bfa998d2452bc52f76ace25 0.1s done
+#12 naming to docker.io/library/achados-perdidos-web:1.0 0.0s done
+#12 unpacking to docker.io/library/achados-perdidos-web:1.0 0.1s done
+#12 DONE 0.7s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.1s
+ achados-perdidos-web:1.0  Built
+ Network achados-perdidos_rede_borda  Creating
+ Network achados-perdidos_rede_borda  Created
+ Network achados-perdidos_rede_interna  Creating
+ Network achados-perdidos_rede_interna  Created
+ Volume achados-perdidos_fotos  Creating
+ Volume achados-perdidos_fotos  Created
+ Volume achados-perdidos_dados_banco  Creating
+ Volume achados-perdidos_dados_banco  Created
+ Container achados-perdidos-db-1  Creating
+ Container achados-perdidos-db-1  Created
+ Container achados-perdidos-web-1  Creating
+ Container achados-perdidos-web-1  Created
+ Container achados-perdidos-nginx-1  Creating
+ Container achados-perdidos-nginx-1  Created
+ Container achados-perdidos-db-1  Starting
+ Container achados-perdidos-db-1  Started
+ Container achados-perdidos-db-1  Waiting
+ Container achados-perdidos-db-1  Healthy
+ Container achados-perdidos-web-1  Starting
+ Container achados-perdidos-web-1  Started
+ Container achados-perdidos-web-1  Waiting
+ Container achados-perdidos-web-1  Healthy
+ Container achados-perdidos-nginx-1  Starting
+ Container achados-perdidos-nginx-1  Started
+

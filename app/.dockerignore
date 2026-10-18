@@ -1,0 +1,15 @@
+# Segredos nunca entram no contexto de build
+.env
+.env.*
+
+# Bytecode e caches do Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Artefatos locais que não pertencem à imagem
+.venv/
+venv/
+uploads/
+.git/
