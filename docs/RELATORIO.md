@@ -75,7 +75,9 @@ O [`nginx/default.conf`](../nginx/default.conf) define um `upstream` para `web:5
 compartilhada. Sem ela, cada um dos 16 workers do nginx mantinha o próprio ponteiro de round-robin, e
 com `--scale` todas as requisições caíam na primeira réplica. Esse problema foi encontrado e corrigido
 durante os testes [ev 17]. O arquivo também define `client_max_body_size 10m` (o padrão de 1 MB recusaria
-fotos de celular com HTTP 413), cabeçalhos `X-Forwarded-*` e `server_tokens off`.
+fotos de celular com HTTP 413), cabeçalhos `X-Forwarded-*` e `server_tokens off`. Um `location = /` responde a raiz com o índice
+das rotas em JSON (`application/json; charset=utf-8`). O `app.py` não tem rota `/`, e mexer no código estava fora do escopo, então
+quem responde é o proxy, sem chegar ao `web`. As demais rotas, inclusive as inexistentes (404 do Flask), seguem para a API [ev 23].
 
 ### Serviço `web`
 | Chave | Valor | Motivo |

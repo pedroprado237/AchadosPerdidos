@@ -13,7 +13,7 @@ flowchart TB
         p8081(["porta publicada<br/>127.0.0.1:8081<br/>(só profile debug)"])
 
         subgraph BORDA["rede_borda · bridge definida pelo usuário"]
-            nginx["<b>nginx</b><br/>nginx:1.27-alpine<br/>escuta :80"]
+            nginx["<b>nginx</b><br/>nginx:1.27-alpine<br/>escuta :80 · responde GET / (índice)"]
         end
 
         subgraph INTERNA["rede_interna · bridge definida pelo usuário (fora do alcance do host)"]

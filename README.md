@@ -11,6 +11,7 @@ são recriados. É a primeira etapa da migração do sistema para a nuvem.
 | [docs/RELATORIO.md](docs/RELATORIO.md) | Explicação do Dockerfile e do Compose, caminho de uma requisição e ciclo de vida dos volumes |
 | [docs/REFLEXAO.md](docs/REFLEXAO.md) | Questões de reflexão e equivalência com serviços de nuvem (Azure, AWS, GCP) |
 | [docs/evidencias/](docs/evidencias/README.md) | Saídas reais dos testes, com legenda |
+| [Apresentacao.md](Apresentacao.md) | Resumo para a apresentação: requisitos × provas, decisões e roteiro de demonstração |
 
 ## Visão geral
 
@@ -83,6 +84,9 @@ docker compose logs -f web # Ctrl+C para sair
 > No **PowerShell** do Windows, use `curl.exe` em vez de `curl` (no PowerShell 5.1, `curl` é um alias de `Invoke-WebRequest`).
 
 ```bash
+# Índice das rotas (também pode ser aberto no navegador: http://localhost:8080/)
+curl http://localhost:8080/
+
 # Saúde: deve responder "status": "ok" e "banco": "conectado"
 curl http://localhost:8080/health
 
@@ -111,6 +115,7 @@ docker compose port db 5432      # vazio: banco sem porta no host
 
 | Método | Rota | Parâmetros | Resposta |
 |--------|------|------------|----------|
+| `GET` | `/` | — | `200` JSON com o índice das rotas abaixo (respondido pelo nginx, já que o `app.py` não tem rota raiz) |
 | `GET` | `/health` | — | `200 {"status":"ok","banco":"conectado","container":"<hostname>"}`; `503` se o banco estiver inacessível |
 | `GET` | `/itens` | `?local=<texto>` (opcional, busca parcial sem diferenciar maiúsculas) | `200 [{"id","descricao","local","foto","criado_em"}, …]`, mais recentes primeiro |
 | `POST` | `/itens` | `multipart/form-data`: `descricao`* , `local`* , `foto` (arquivo, opcional) | `201 {"id":N,"foto":"<uuid>.<ext>"}`; `400` se faltar campo obrigatório |

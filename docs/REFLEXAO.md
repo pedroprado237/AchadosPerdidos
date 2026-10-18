@@ -48,26 +48,21 @@ Com **só o `app.py` alterado** (numa cópia temporária do contexto), as camada
 qualquer alteração de uma linha reinstalaria todas as dependências: os mesmos ~80 s e uma camada nova de 21 MB para enviar ao registry a cada deploy.
 
 ### Q6. Porta 5432 fechada, LGPD e medidas adicionais
-Publicar a 5432 colocaria o banco ao alcance de qualquer máquina que alcance o host (Wi-Fi do campus, VPN), sujeito a força
-bruta de senha e a exploração de vulnerabilidades. No Linux, o Docker ainda publica em `0.0.0.0` passando por cima de regras
-do firewall local. No nosso ambiente, o `db` não tem `ports` [ev 10], fica só na `rede_interna`, o nginx (componente exposto) nem tem
-rota até ele, e o adminer só ouve em `127.0.0.1`. As fotos podem mostrar RG ou carteira de estudante, que são **dados pessoais**
-(LGPD, art. 5º, I). O art. 46 obriga o controlador a adotar medidas técnicas de segurança, e o art. 6º traz os princípios
-de **necessidade** e **segurança**. Reduzir a superfície de ataque, tirar segredos do Git (RNF03) e não rodar como root (RNF04)
-seguem esses princípios. **Medidas adicionais propostas:** (1) **controle de acesso e criptografia** das fotos: hoje `/fotos/<nome>` é público.
-Exigir autenticação ou URLs assinadas com expiração, com HTTPS no proxy e criptografia em repouso no storage. (2) **Retenção e minimização**:
-apagar fotos e registros automaticamente após a devolução ou após N dias, e orientar o atendimento a fotografar o objeto sem expor
-o documento (ou mascarar os dados antes do upload), com log de auditoria de quem acessou cada foto.
+Publicar a 5432 exporia o banco a qualquer máquina que alcance o host (Wi-Fi do campus, VPN), abrindo espaço para força bruta
+e exploração de falhas. No nosso ambiente, o `db` não tem `ports` [ev 10], fica só na `rede_interna`, o nginx nem tem rota até ele
+e o adminer só ouve em `127.0.0.1`. Fotos de RG ou carteira de estudante são **dados pessoais** (LGPD, art. 5º, I), e o art. 46 exige
+medidas técnicas de segurança. A superfície mínima, os segredos fora do Git (RNF03) e o processo sem root (RNF04) atendem a esse dever.
+**Medidas adicionais:** (1) **controle de acesso e criptografia**: hoje `/fotos/<nome>` é público. Exigir autenticação ou URLs assinadas
+com expiração, HTTPS e criptografia em repouso. (2) **Retenção mínima**: apagar fotos e registros após a devolução ou após N dias,
+fotografar o objeto sem expor o documento e registrar quem acessou cada foto.
 
 ### Q7. `docker compose up -d --scale web=3`
-**Na arquitetura base do enunciado** (`web` publicando `8080:5000`), o comando falha: a primeira réplica ocupa a porta 8080 do
-host e a segunda recebe *"Bind for 0.0.0.0:8080 failed: port is already allocated"*. Uma porta do host só pode ter um dono [ev 18].
-Para ter 3 réplicas, é preciso tirar a porta publicada do `web` (e não usar `container_name`) e colocar um **balanceador** na frente.
-Foi isso que o bônus fez: o nginx publica a 8080, o DNS do Docker devolve os 3 IPs de `web`, e o tráfego fica dividido 4/4/4 [ev 17].
-Dois detalhes surgiram no teste: o nginx resolve `web` só ao iniciar, então precisa ser reiniciado depois de escalar; e foi necessário usar
-`zone` no `upstream` para que o round-robin fosse global entre os 16 workers. **Compartilhar o volume `fotos`:** no **mesmo host**, sim.
-É o mesmo diretório para as 3 réplicas [ev 17], cada upload gera um nome UUID único (sem colisão de escrita) e as leituras são concorrentes e seguras.
-O volume `local`, porém, existe num único nó. Réplicas em máquinas diferentes exigiriam storage de rede (NFS, EFS, Azure Files) ou, melhor, object storage.
+**Na arquitetura base** (`web` publicando `8080:5000`), o comando falha: a 1ª réplica ocupa a porta 8080 do host e a 2ª recebe
+*"port is already allocated"*. Uma porta do host só pode ter um dono [ev 18]. Para ter 3 réplicas, é preciso tirar a porta do `web`
+(e não usar `container_name`) e pôr um **balanceador** na frente. Foi o que o bônus fez: o nginx publica a 8080, o DNS do Docker devolve
+os 3 IPs de `web` e o tráfego fica 4/4/4 [ev 17]. Isso exigiu `zone` no `upstream` e um reinício do nginx após escalar. **Volume `fotos`
+compartilhado:** no mesmo host, sim. As 3 réplicas veem o mesmo diretório [ev 17] e cada upload tem nome UUID único (sem colisão).
+Mas o volume `local` existe num só nó: réplicas em várias máquinas exigiriam storage de rede (NFS/EFS/Azure Files) ou, melhor, object storage.
 
 ---
 

@@ -1,0 +1,45 @@
+# Extra - GET / responde pelo nginx com o índice das rotas da API em JSON (o app.py não tem rota raiz e não foi alterado); demais rotas seguem para o web
+# Gerado em: 2026-10-18 20:44:17 -0300
+
+$ curl -s -i http://localhost:8080/ | tr -d "\r" | sed -n "1p;/Content-Type/p"
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+$ curl -s http://localhost:8080/ | python -m json.tool --no-ensure-ascii
+{
+    "aplicacao": "Achados & Perdidos",
+    "rotas": [
+        {
+            "metodo": "GET",
+            "rota": "/health",
+            "descricao": "Saúde da API e conexão com o banco"
+        },
+        {
+            "metodo": "GET",
+            "rota": "/itens",
+            "descricao": "Lista os objetos; filtro opcional ?local=texto"
+        },
+        {
+            "metodo": "POST",
+            "rota": "/itens",
+            "descricao": "Cadastra objeto (multipart: descricao, local, foto opcional)"
+        },
+        {
+            "metodo": "GET",
+            "rota": "/fotos/<nome>",
+            "descricao": "Devolve a foto armazenada no volume"
+        },
+        {
+            "metodo": "GET",
+            "rota": "/estatisticas",
+            "descricao": "Total de itens no banco e de fotos no volume"
+        }
+    ]
+}
+
+$ curl -s -o NUL -w "GET /health -> HTTP %{http_code} (via web)\n" http://localhost:8080/health
+GET /health -> HTTP 200 (via web)
+
+$ curl -s -o NUL -w "GET /rota-inexistente -> HTTP %{http_code} (404 do Flask)\n" http://localhost:8080/rota-inexistente
+GET /rota-inexistente -> HTTP 404 (404 do Flask)
+

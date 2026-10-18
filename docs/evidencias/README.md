@@ -29,6 +29,7 @@ Cada arquivo começa com uma legenda de uma linha, a data/hora e, depois, cada c
 | 20 | [20-q3-q4-initdb-healthcheck.txt](20-q3-q4-initdb-healthcheck.txt) | Q3/Q4: servidor temporário pronto antes do `init.sql`; *Skipping initialization* na recriação; `ALTER TABLE` revertido; healthchecks. |
 | 21 | [21-q5-cache-camadas.txt](21-q5-cache-camadas.txt) | Q5: build frio (`pip install` = 83,6 s), rebuild todo `CACHED`, e só `COPY app.py` refeito (0,1 s) quando apenas o código muda. |
 | 22 | [22-teste-clone-limpo.txt](22-teste-clone-limpo.txt) | Checklist: clone novo → sem `.env` falha com mensagem clara → `cp .env.example .env` → `up -d --build` → health ok, `whoami` = app, db sem porta, cadastro persiste após `down` + `up`. |
+| 23 | [23-rota-raiz-indice.txt](23-rota-raiz-indice.txt) | Extra: `GET /` responde pelo nginx com o índice das rotas em JSON (UTF-8); `/health` segue para o web e rota inexistente dá 404 do Flask. |
 
 **Observações sobre a coleta**
 
